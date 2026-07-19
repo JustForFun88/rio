@@ -849,10 +849,26 @@ impl Renderer {
                 None => return,
             };
 
+            // c=/r= are optional for virtual placements: kitty derives
+            // the grid from the image and cell size when they are
+            // omitted. Otherwise the placement box collapses to 1x1
+            // cell and the whole image ends up squeezed into a single
+            // cell.
+            let cols = if vp.columns > 0 {
+                vp.columns
+            } else {
+                (img.data.width as f32 / cell_width).ceil().max(1.0) as u32
+            };
+            let rows = if vp.rows > 0 {
+                vp.rows
+            } else {
+                (img.data.height as f32 / cell_height).ceil().max(1.0) as u32
+            };
+
             let geom = match rio_backend::ansi::kitty_virtual::compute_run_geometry(
                 &run,
-                vp.columns,
-                vp.rows,
+                cols,
+                rows,
                 img.data.width as u32,
                 img.data.height as u32,
                 cell_width,
